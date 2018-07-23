@@ -39,6 +39,12 @@ void buffer_rmch(char* b, int* p){
 	return;
 }
 
+void newline(){
+	int x, y;
+	getyx(stdscr, y, x);
+	move(y+1, x);
+}
+
 void process(){	
 	int c = NULL;
 	FILE* f = NULL;
@@ -61,6 +67,8 @@ void process(){
 				f = popen(b, "r");
 				b[0] = NULL; p = 0;
 				fgets(b, 1024, f);
+				p = strlen(b);
+				newline();
 				break;
 			case KEY_LEFT:
 				if(p > 0) p--;
@@ -85,7 +93,6 @@ void process(){
 int main(){
 	screen_init(&scr.x, &scr.y);	
 	refresh();
-	buffer_from_file(fopen("test.sh", "r"), &main_buf);
 	process();
 	screen_end();
 	return 0;
