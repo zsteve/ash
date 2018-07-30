@@ -5,6 +5,7 @@
 #include "screen.h"
 #include "buffer.h"
 #include "util.h"
+#include "process.h"
 
 // screen info 
 struct{
@@ -45,6 +46,28 @@ void newline(){
 	move(y+1, x);
 }
 
+void parse_cmd(char* command, int* argc, char** argv, int max_args){
+	char* tok;
+	char t[2] = " ";
+	int i = 0;
+	tok = strtok(command, t);
+	
+	while(tok != NULL){
+		argv[i] = malloc((strlen(tok)+1)*sizeof(char));
+		strcpy(argv[i], tok);
+		i++;
+		tok = strtok(NULL, t);
+	}
+	argv[i] = NULL;
+}
+
+void clobber_argv(int argc, char** argv){
+	for(int i = 0; i < argc; i++){
+		free(argv[i]);
+	}
+}
+
+
 void process(){	
 	int c = NULL;
 	FILE* f = NULL;
@@ -64,10 +87,8 @@ void process(){
 				break;
 			case KEY_ENTER:
 			case 10:
-				f = popen(b, "r");
-				b[0] = NULL; p = 0;
-				fgets(b, 1024, f);
-				p = strlen(b);
+				run(b);
+				b[0] = '\0'; p = 0;
 				newline();
 				break;
 			case KEY_LEFT:

@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
 
 #endif
 

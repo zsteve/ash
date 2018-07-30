@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
 
 /**
  * From code on http://rachid.koucha.free.fr/tech_corner/pty_pdip.html 
@@ -26,17 +28,10 @@ int main(){
 		// father process
 		close(fds);
 		while(1){
-			write(1, "Input: ", sizeof("Input: "));
-			rc = read(0, input, sizeof(input));
+			rc = read(fdm, input, sizeof(input)-1);
 			if(rc > 0){
-				write(fdm, input, rc);
-				rc = read(fdm, input, sizeof(input)-1);
-				if(rc > 0){
-					input[rc] = '\0';
-					fprintf(stderr, "%s", input);
-				}else{
-					break;
-				}
+				input[rc] = '\0';
+				fprintf(stderr, "%s", input);
 			}else{
 				break;
 			}
@@ -59,13 +54,14 @@ int main(){
 		dup(fds);
 		
 		while(1){
-			rc = read(fds, input, sizeof(input)-1);
+			/*rc = read(fds, input, sizeof(input)-1);
 			if(rc > 0){
 				input[rc - 1] = '\0';
 				printf("Child received: %s\n", input);
 			}else{
 				break;
-			}
+			}*/
+			printf("hello there, I'm the child!\n"); sleep(3);
 		}
 	}
 	return 0;
