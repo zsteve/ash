@@ -14,32 +14,6 @@ struct{
 
 extern buffer_t main_buf;
 
-void buffer_addch(char* b, int* p, char c){
-	int end = strlen(b);
-	b[end+1] = '\0';
-	for(int i = end; i > *p; i--){
-		b[i] = b[i-1];
-	}
-	b[*p] = c;
-	// now update the pointer
-	(*p)++;
-	return;
-
-}
-
-void buffer_rmch(char* b, int* p){	
-	int i = *p;
-	if(!b[*p]){
-		b[*p-1] = '\0';
-		(*p)--;
-	}else{
-		while(b[i]){
-			b[i] = b[i+1]; i++;
-		}
-	}
-	return;
-}
-
 void newline(){
 	int x, y;
 	getyx(stdscr, y, x);
@@ -67,7 +41,6 @@ void clobber_argv(int argc, char** argv){
 	}
 }
 
-
 void process(){	
 	int c = NULL;
 	FILE* f = NULL;
@@ -75,7 +48,14 @@ void process(){
 	int n = 1024;
 	memset(b, 0, sizeof(char)*1024);
 	int p = 0;	// edit position in buffer - should point to the next character
-			// we will replace
+				// we will replace
+	
+	
+	cell_list_t cell_list = cell_list_create();
+	cell_t* t = cell_list_append(&cell_list);
+
+	cell_makewindow(t, 4, scr.x, 1, 0);
+
 	while(c = getch()){
 		switch(c){
 			case CTRL('d'):
@@ -87,7 +67,7 @@ void process(){
 				break;
 			case KEY_ENTER:
 			case 10:
-				run(b);
+				//run(b);
 				b[0] = '\0'; p = 0;
 				newline();
 				break;
@@ -101,18 +81,18 @@ void process(){
 				buffer_addch(b, &p, c);
 				break;
 		}
-		int x, y;
+		/*int x, y;
 		getyx(stdscr, y, x);
 		move(y, 0);
 		clrtoeol();
 		printw("%s", b);
-		move(y, p);
+		move(y, p);*/
 		refresh();
 	}
 }
 
 int main(){
-	screen_init(&scr.x, &scr.y);	
+	screen_init(&scr.x, &scr.y);
 	refresh();
 	process();
 	screen_end();

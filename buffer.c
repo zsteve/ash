@@ -1,7 +1,36 @@
 #include "buffer.h"
+#include "io.h"
+#include "process.h"
 #include <ncurses.h>
 
+
 buffer_t main_buf = { .buf_root = NULL };
+
+void buffer_addch(char* b, int* p, char c){
+	int end = strlen(b);
+	b[end+1] = '\0';
+	for(int i = end; i > *p; i--){
+		b[i] = b[i-1];
+	}
+	b[*p] = c;
+	// now update the pointer
+	(*p)++;
+	return;
+
+}
+
+void buffer_rmch(char* b, int* p){	
+	int i = *p;
+	if(!b[*p]){
+		b[*p-1] = '\0';
+		(*p)--;
+	}else{
+		while(b[i]){
+			b[i] = b[i+1]; i++;
+		}
+	}
+	return;
+}
 
 void buffer_from_file(FILE* stream, buffer_t* buf){
 	char* read_buf = NULL;
@@ -17,8 +46,49 @@ cell_t* cell_create(){
 	c->input_buf = (buffer_t){.buf_root = NULL};
 	c->output_buf = (buffer_t){.buf_root = NULL};
 	c->pid = NULL;
-	c->h = 0;
+	c->win = NULL;
 	return c;
+}
+
+int cell_makewindow(cell_t* c, int h, int w, int y, int x){
+	if(c->win) return 0;	// window already exists
+	c->win = newwin(h, w, y, x);
+	wrefresh(c->win);
+	// call cell window procedure
+	if(fork()){
+		// parent process
+	}else{
+		// child process
+		cell_windowproc(c);
+	}
+	return 1;
+}
+
+void cell_windowproc(cell_t* c){
+	int k = NULL;
+	start_color();
+	init_pair(1,COLOR_BLUE, COLOR_RED);
+	wbkgd(c->win, COLOR_PAIR(1));
+	wrefresh(c->win);
+	while(k = getch()){
+		switch(k){
+			default:
+				break;
+		}
+		int x, y;
+		getyx(c->win, y, x);
+		wmove(c->win, y, 0);
+		wclrtoeol(c->win);
+		wprintw(c->win, "Cell text");
+		wrefresh(c->win);
+		wmove(c->win, y, x);
+	}
+}
+
+int cell_delwindow(cell_t* c){
+	if(c->win) return 0;
+	delwin(c->win); c->win = NULL;
+	return 1;
 }
 
 void cell_destroy(cell_t* c){
@@ -36,9 +106,13 @@ void cell_list_destroy(cell_list_t c, void (*f)(void*)){
 	}
 }
 
-void cell_list_append(cell_list_t* c){
+cell_t* cell_list_append(cell_list_t* c){
 	c->root = g_list_append(c->root, cell_create());
-	return;
+	return cell_list_last(c);
+}
+
+cell_t* cell_list_last(cell_list_t* c){
+	return (cell_t*)g_list_last(c->root)->data;
 }
 
 void run_cell(cell_t* c){
